@@ -1,0 +1,41 @@
+{
+  "name": "Axiora - Goal Management",
+  "short_name": "Axiora",
+  "description": "AI-powered goal management and productivity platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Add Goal",
+      "short_name": "Goal",
+      "description": "Create a new goal",
+      "url": "/?action=add-goal",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Add Task",
+      "short_name": "Task",
+      "description": "Create a new task",
+      "url": "/?action=add-task",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
