@@ -1,59 +1,51 @@
-# Full-Stack Deployment Guide
+# Full-Stack Deployment Guide (No Credit Card Required)
 
-Axiora is now a full-stack application with a React frontend and a Node.js/Express backend.
+Axiora is now a full-stack application. To avoid credit card requirements, we will deploy the **entire project (Frontend + Backend)** to **Vercel** and use **MongoDB Atlas** for the database.
 
 ---
 
-## **Free Deployment via Render (Recommended)**
-
-Render is ideal for this setup as it supports multiple services and a free PostgreSQL database (though we'll use MongoDB Atlas for the DB for better flexibility).
-
-### **1. Set up your Database (MongoDB Atlas)**
+## **1. Set up your Database (MongoDB Atlas)**
+MongoDB Atlas offers a generous free tier for storage and **does not require a credit card**.
 1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-2. Create a new Cluster (Free Tier).
+2. Create a new Cluster (M0 Free Tier).
 3. Under **"Network Access"**, allow access from anywhere (`0.0.0.0/0`).
 4. Under **"Database Access"**, create a user and password.
-5. Get your **Connection String**.
+5. Get your **Connection String**. It will look like: `mongodb+srv://<user>:<password>@cluster.mongodb.net/axiora`.
 
-### **2. Deploy the Backend**
-1. Push your code to GitHub.
-2. On Render, click **"New +"** -> **"Web Service"**.
-3. Connect your repository.
-4. Set the **Root Directory** to `server`.
-5. **Runtime**: `Node`.
-6. **Build Command**: `npm install`.
-7. **Start Command**: `node index.js`.
-8. Add **Environment Variables**:
-   - `MONGODB_URI`: Your MongoDB Atlas connection string.
-   - `PORT`: `5000`.
+---
 
-### **3. Deploy the Frontend**
-1. On Render, click **"New +"** -> **"Web Service"**.
-2. Connect the same repository.
-3. Set the **Root Directory** to `.` (the project root).
-4. **Environment**: `Docker`.
-5. Add **Environment Variables**:
-   - `VITE_API_URL`: The URL of your newly deployed backend (e.g., `https://axiora-api.onrender.com/api`).
+## **2. Deploy to Vercel (Unified Deployment)**
+Vercel can host both your React frontend and your Express backend together as a single project.
+1. Create a free account at [Vercel](https://vercel.com/) (**No credit card required**).
+2. Push your code to a GitHub repository.
+3. In Vercel, click **"Add New"** -> **"Project"**.
+4. Import your GitHub repository.
+5. **Configuration**:
+   - **Framework Preset**: Vite (detected automatically).
+   - **Root Directory**: `.` (the project root).
+6. **Environment Variables**:
+   - Add `MONGODB_URI`: Your MongoDB Atlas connection string.
+   - Add `VITE_API_URL`: `/api` (this tells the frontend to use the same domain).
+   - Add `NODE_ENV`: `production`.
+7. Click **"Deploy"**.
+
+---
+
+## **How it Works (Architecture)**
+- **Frontend**: The React app is built and served as static files.
+- **Backend**: The [api/index.js](file:///d:/Axiora/api/index.js) file is treated by Vercel as a **Serverless Function**.
+- **Routing**: The [vercel.json](file:///d:/Axiora/vercel.json) file routes all `/api/*` requests to the backend logic.
 
 ---
 
 ## **Local Testing with Docker Compose**
 
-The easiest way to run the entire stack locally is with Docker Compose:
+You can still test the entire stack locally with Docker Compose:
 
 ```bash
 docker-compose up --build
 ```
 
-This will start:
-- **Frontend** at [http://localhost](http://localhost)
-- **Backend API** at [http://localhost:5000](http://localhost:5000)
-- **MongoDB** internally at `mongodb://mongo:27017`
-
----
-
-## **Key Full-Stack Files**
-
-- [server/index.js](file:///d:/Axiora/server/index.js): The main entry point for the API.
-- [src/context/AppContext.tsx](file:///d:/Axiora/src/context/AppContext.tsx): Updated to sync with the backend.
-- [docker-compose.yml](file:///d:/Axiora/docker-compose.yml): Orchestrates all services.
+- **Frontend**: [http://localhost](http://localhost)
+- **Backend API**: [http://localhost:5000/api](http://localhost:5000/api)
+- **MongoDB**: Internal container.

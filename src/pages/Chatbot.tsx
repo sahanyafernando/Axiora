@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Send, Mic, MicOff, User, Bot, Sparkles, Volume2, VolumeX } from 'lucide-react'
 import { format } from 'date-fns'
 import { useAppContext } from '../context/AppContext'
