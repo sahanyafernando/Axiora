@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const isProduction = import.meta.env.PROD
+const API_URL = import.meta.env.VITE_API_URL || (isProduction ? '/api' : 'http://localhost:5000/api')
 
 interface Expense {
   _id?: string
@@ -96,78 +97,133 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [goals])
 
   const addExpense = async (expense: Omit<Expense, 'id' | '_id'>) => {
-    const res = await fetch(`${API_URL}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(expense)
-    })
-    const data = await res.json()
-    setExpenses(prev => [{ ...data, id: data._id }, ...prev])
+    try {
+      const res = await fetch(`${API_URL}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expense)
+      })
+      if (!res.ok) throw new Error('Failed to add expense')
+      const data = await res.json()
+      setExpenses(prev => [{ ...data, id: data._id }, ...prev])
+    } catch (error) {
+      console.error('Error adding expense:', error)
+      // Local fallback
+      setExpenses(prev => [{ ...expense, id: Date.now().toString() }, ...prev])
+    }
   }
 
   const updateExpense = async (id: string, expense: Omit<Expense, 'id' | '_id'>) => {
-    const res = await fetch(`${API_URL}/expenses/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(expense)
-    })
-    const data = await res.json()
-    setExpenses(prev => prev.map(e => e._id === id ? { ...data, id: data._id } : e))
+    try {
+      const res = await fetch(`${API_URL}/expenses/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expense)
+      })
+      if (!res.ok) throw new Error('Failed to update expense')
+      const data = await res.json()
+      setExpenses(prev => prev.map(e => e._id === id ? { ...data, id: data._id } : e))
+    } catch (error) {
+      console.error('Error updating expense:', error)
+      setExpenses(prev => prev.map(e => e.id === id ? { ...expense, id } : e))
+    }
   }
 
   const deleteExpense = async (id: string) => {
-    await fetch(`${API_URL}/expenses/${id}`, { method: 'DELETE' })
-    setExpenses(prev => prev.filter(e => e._id !== id))
+    try {
+      const res = await fetch(`${API_URL}/expenses/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete expense')
+      setExpenses(prev => prev.filter(e => e._id !== id && e.id !== id))
+    } catch (error) {
+      console.error('Error deleting expense:', error)
+      setExpenses(prev => prev.filter(e => e.id !== id))
+    }
   }
 
   const addTask = async (task: Omit<Task, 'id' | '_id'>) => {
-    const res = await fetch(`${API_URL}/tasks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task)
-    })
-    const data = await res.json()
-    setTasks(prev => [{ ...data, id: data._id, date: new Date(data.date) }, ...prev])
+    try {
+      const res = await fetch(`${API_URL}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      })
+      if (!res.ok) throw new Error('Failed to add task')
+      const data = await res.json()
+      setTasks(prev => [{ ...data, id: data._id, date: new Date(data.date) }, ...prev])
+    } catch (error) {
+      console.error('Error adding task:', error)
+      setTasks(prev => [{ ...task, id: Date.now().toString() }, ...prev])
+    }
   }
 
   const updateTask = async (id: string, task: Omit<Task, 'id' | '_id'>) => {
-    const res = await fetch(`${API_URL}/tasks/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task)
-    })
-    const data = await res.json()
-    setTasks(prev => prev.map(t => t._id === id ? { ...data, id: data._id, date: new Date(data.date) } : t))
+    try {
+      const res = await fetch(`${API_URL}/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      })
+      if (!res.ok) throw new Error('Failed to update task')
+      const data = await res.json()
+      setTasks(prev => prev.map(t => t._id === id ? { ...data, id: data._id, date: new Date(data.date) } : t))
+    } catch (error) {
+      console.error('Error updating task:', error)
+      setTasks(prev => prev.map(t => t.id === id ? { ...task, id } : t))
+    }
   }
 
   const deleteTask = async (id: string) => {
-    await fetch(`${API_URL}/tasks/${id}`, { method: 'DELETE' })
-    setTasks(prev => prev.filter(t => t._id !== id))
+    try {
+      const res = await fetch(`${API_URL}/tasks/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete task')
+      setTasks(prev => prev.filter(t => t._id !== id && t.id !== id))
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      setTasks(prev => prev.filter(t => t.id !== id))
+    }
   }
 
   const addGoal = async (goal: Omit<Goal, 'id' | 'status' | '_id'>) => {
-    const res = await fetch(`${API_URL}/goals`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(goal)
-    })
-    const data = await res.json()
-    setGoals(prev => [{ ...data, id: data._id }, ...prev])
+    try {
+      const res = await fetch(`${API_URL}/goals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(goal)
+      })
+      if (!res.ok) throw new Error('Failed to add goal')
+      const data = await res.json()
+      setGoals(prev => [{ ...data, id: data._id }, ...prev])
+    } catch (error) {
+      console.error('Error adding goal:', error)
+      setGoals(prev => [{ ...goal, id: Date.now().toString(), status: 'Pending' }, ...prev])
+    }
   }
 
   const updateGoal = async (id: string, goal: Partial<Goal>) => {
-    const res = await fetch(`${API_URL}/goals/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(goal)
-    })
-    const data = await res.json()
-    setGoals(prev => prev.map(g => g._id === id ? { ...data, id: data._id } : g))
+    try {
+      const res = await fetch(`${API_URL}/goals/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(goal)
+      })
+      if (!res.ok) throw new Error('Failed to update goal')
+      const data = await res.json()
+      setGoals(prev => prev.map(g => g._id === id ? { ...data, id: data._id } : g))
+    } catch (error) {
+      console.error('Error updating goal:', error)
+      setGoals(prev => prev.map(g => g.id === id ? { ...g, ...goal } : g))
+    }
   }
 
   const deleteGoal = async (id: string) => {
-    await fetch(`${API_URL}/goals/${id}`, { method: 'DELETE' })
-    setGoals(prev => prev.filter(g => g._id !== id))
+    try {
+      const res = await fetch(`${API_URL}/goals/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete goal')
+      setGoals(prev => prev.filter(g => g._id !== id && g.id !== id))
+    } catch (error) {
+      console.error('Error deleting goal:', error)
+      setGoals(prev => prev.filter(g => g.id !== id))
+    }
   }
 
   return (
