@@ -14,6 +14,7 @@ import {
   subMonths,
   startOfDay
 } from 'date-fns'
+import { useAppContext } from '../context/AppContext'
 
 interface Task {
   id: number
@@ -24,13 +25,9 @@ interface Task {
 }
 
 const CalendarPage = () => {
+  const { tasks, addTask, updateTask, deleteTask } = useAppContext()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()))
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: 1, title: 'Study React', category: 'Study and subject', date: new Date(), status: 'Pending' },
-    { id: 2, title: 'Gym session', category: 'Skill development', date: new Date(), status: 'Pending' },
-  ])
-
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [formData, setFormData] = useState({
@@ -68,7 +65,9 @@ const CalendarPage = () => {
 
   const isHoliday = (day: Date) => slHolidays.find(h => isSameDay(new Date(h.date), day))
 
-  const selectedDayTasks = tasks.filter(t => isSameDay(new Date(t.date), selectedDate))
+  const selectedDayTasks = [...tasks]
+    .filter(t => isSameDay(new Date(t.date), selectedDate))
+    .sort((a, b) => b.id - a.id)
 
   const handleOpenModal = (task?: Task) => {
     if (task) {
@@ -91,22 +90,23 @@ const CalendarPage = () => {
 
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      setTasks(tasks.filter(t => t.id !== id))
+      deleteTask(id)
     }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const taskData = {
-      ...formData,
+      title: formData.title,
+      category: formData.category,
       date: startOfDay(new Date(formData.date)),
       status: editingTask?.status || 'Pending' as const
     }
 
     if (editingTask) {
-      setTasks(tasks.map(t => t.id === editingTask.id ? { ...taskData, id: t.id } : t))
+      updateTask(editingTask.id, taskData)
     } else {
-      setTasks([...tasks, { ...taskData, id: Date.now() }])
+      addTask(taskData)
     }
     setIsModalOpen(false)
   }
@@ -119,19 +119,19 @@ const CalendarPage = () => {
       className="space-y-6"
     >
       <header className="glass-card flex justify-between items-center p-6 mb-8">
-        <h2 className="text-4xl font-black text-white flex items-center">
-          {format(currentDate, 'MMMM')} <span className="ml-4 text-white/30 font-medium">{format(currentDate, 'yyyy')}</span>
+        <h2 className="text-4xl font-black text-slate-900 dark:text-white flex items-center">
+          {format(currentDate, 'MMMM')} <span className="ml-4 text-slate-400 dark:text-white/30 font-medium">{format(currentDate, 'yyyy')}</span>
         </h2>
         <div className="flex space-x-3">
           <button 
             onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-            className="p-3 bg-white/5 border border-white/10 rounded-2xl text-white hover:bg-white/10 transition-all hover:scale-110"
+            className="p-3 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl text-slate-600 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-all hover:scale-110"
           >
             <ChevronLeft size={24} />
           </button>
           <button 
             onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-            className="p-3 bg-white/5 border border-white/10 rounded-2xl text-white hover:bg-white/10 transition-all hover:scale-110"
+            className="p-3 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl text-slate-600 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-all hover:scale-110"
           >
             <ChevronRight size={24} />
           </button>
@@ -143,7 +143,7 @@ const CalendarPage = () => {
         <section className="lg:col-span-3 glass-card overflow-hidden">
           <div className="grid grid-cols-7 gap-2 mb-6">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center py-2 text-white/30 font-black text-[10px] uppercase tracking-[0.2em]">{day}</div>
+              <div key={day} className="text-center py-2 text-slate-400 dark:text-white/30 font-black text-[10px] uppercase tracking-[0.2em]">{day}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-2">
@@ -160,12 +160,12 @@ const CalendarPage = () => {
                   className={`
                     min-h-[110px] p-4 rounded-3xl border transition-all duration-300 cursor-pointer relative group flex flex-col justify-between
                     ${!isSameMonth(day, monthStart) ? 'opacity-20 pointer-events-none' : ''}
-                    ${isToday ? 'bg-blue-600/30 border-blue-500 shadow-lg' : 'bg-white/5 border-white/10 hover:border-white/20'}
-                    ${isSelected ? 'ring-2 ring-white/40 border-white/40 shadow-2xl scale-[1.02] z-10' : ''}
+                    ${isToday ? 'bg-blue-600/30 border-blue-500 shadow-lg' : 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20'}
+                    ${isSelected ? 'ring-2 ring-blue-500 dark:ring-white/40 border-blue-500 dark:border-white/40 shadow-2xl scale-[1.02] z-10' : ''}
                   `}
                 >
                   <div className="flex justify-between items-start">
-                    <span className={`font-black text-xl ${holiday ? 'text-red-400' : 'text-white'}`}>{format(day, 'd')}</span>
+                    <span className={`font-black text-xl ${holiday ? 'text-red-400' : 'text-slate-900 dark:text-white'}`}>{format(day, 'd')}</span>
                     {hasTasks && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />}
                   </div>
                   {holiday && (
@@ -183,8 +183,8 @@ const CalendarPage = () => {
         <section className="glass-card h-fit sticky top-8">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h3 className="text-xl font-bold text-white leading-none mb-1">Tasks</h3>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-wider">{format(selectedDate, 'MMM d, yyyy')}</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none mb-1">Tasks</h3>
+              <p className="text-slate-500 dark:text-white/40 text-xs font-bold uppercase tracking-wider">{format(selectedDate, 'MMM d, yyyy')}</p>
             </div>
             <button 
               onClick={() => handleOpenModal()}
@@ -196,30 +196,30 @@ const CalendarPage = () => {
           
           <div className="space-y-4">
             {selectedDayTasks.length === 0 ? (
-              <div className="py-12 text-center text-white/20">
+              <div className="py-12 text-center text-slate-400 dark:text-white/20">
                 <p className="text-sm font-medium">No tasks for this day.</p>
               </div>
             ) : (
               selectedDayTasks.map(task => (
-                <div key={task.id} className="p-4 bg-white/5 rounded-2xl border border-white/10 group transition-all hover:bg-white/10 hover:border-white/20">
+                <div key={task.id} className="p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 group transition-all hover:bg-black/10 dark:hover:bg-white/10 hover:border-black/10 dark:hover:border-white/20">
                   <div className="flex justify-between items-start mb-3">
-                    <h4 className="text-white font-bold text-sm leading-snug pr-4">{task.title}</h4>
+                    <h4 className="text-slate-900 dark:text-white font-bold text-sm leading-snug pr-4">{task.title}</h4>
                     <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => handleOpenModal(task)}
-                        className="p-1.5 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors"
                       >
                         <Pencil size={14} />
                       </button>
                       <button 
                         onClick={() => handleDelete(task.id)}
-                        className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-white/40 bg-white/5 px-2 py-1 rounded-lg">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg">
                     {task.category}
                   </span>
                 </div>
@@ -244,15 +244,15 @@ const CalendarPage = () => {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="glass-card w-full max-w-md relative z-10 border border-white/20"
+              className="glass-card w-full max-w-md relative z-10 border border-black/5 dark:border-white/20"
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-white">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
                   {editingTask ? 'Edit Task' : 'New Task'}
                 </h3>
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-colors"
+                  className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full text-slate-400 dark:text-white/60 hover:text-slate-600 dark:hover:text-white transition-colors"
                 >
                   <X size={24} />
                 </button>
@@ -260,38 +260,38 @@ const CalendarPage = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-1.5">Task Title</label>
+                  <label className="block text-sm font-medium text-slate-500 dark:text-white/60 mb-1.5">Task Title</label>
                   <input
                     type="text"
                     required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                     placeholder="Task details"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-1.5">Category</label>
+                  <label className="block text-sm font-medium text-slate-500 dark:text-white/60 mb-1.5">Category</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none appearance-none"
+                    className="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none appearance-none"
                   >
                     {taskCategories.map(cat => (
-                      <option key={cat} value={cat} className="bg-slate-900">{cat}</option>
+                      <option key={cat} value={cat} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{cat}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-1.5">Date</label>
+                  <label className="block text-sm font-medium text-slate-500 dark:text-white/60 mb-1.5">Date</label>
                   <input
                     type="date"
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                   />
                 </div>
 

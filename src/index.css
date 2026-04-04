@@ -29,8 +29,8 @@ body.dark {
 }
 
 body.light {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #f0f9ff; /* Very light blue (Sky 50) */
+  color: #0c4a6e; /* Darker blue text */
 }
 
 #root {
@@ -52,7 +52,7 @@ body.light {
 }
 
 .light .animated-bg {
-  background: #f8fafc;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%); /* Pure light blue shades */
 }
 
 .mist-container {
@@ -105,8 +105,20 @@ body.light {
   animation-delay: -15s;
 }
 
+.light .mist-1 {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.3) 0%, transparent 70%); /* More blue */
+}
+
+.light .mist-2 {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%); /* Sky Blue */
+}
+
+.light .mist-3 {
+  background: radial-gradient(circle, rgba(186, 230, 253, 0.2) 0%, transparent 70%); /* Light Sky Blue */
+}
+
 .light .mist-container {
-  opacity: 0.3;
+  opacity: 0.9;
 }
 
 @keyframes drift {
@@ -116,33 +128,41 @@ body.light {
 }
 
 @utility glass {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(186, 230, 253, 0.7); /* More opaque Sky 200 */
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  box-shadow: 0 25px 50px -12px rgba(12, 74, 110, 0.15);
 }
 
 @utility glass-card {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(186, 230, 253, 0.7); /* More opaque Sky 200 */
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  box-shadow: 0 25px 50px -12px rgba(12, 74, 110, 0.15);
   border-radius: 1.5rem;
   padding: 1.5rem;
   transition: all 0.3s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(14, 165, 233, 0.6);
   }
 }
 
 .dark .glass {
   background-color: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .dark .glass-card {
   background-color: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
 }
 

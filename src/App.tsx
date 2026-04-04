@@ -55,21 +55,21 @@ function App() {
       <div className="flex h-screen overflow-hidden relative z-10">
         {/* Sidebar */}
         <aside 
-          className={`glass border-r border-white/10 transition-all duration-300 flex flex-col ${isSidebarOpen ? 'w-64' : 'w-20'}`}
+          className={`glass border-r border-white/10 dark:border-white/10 transition-all duration-300 flex flex-col ${isSidebarOpen ? 'w-64' : 'w-20'}`}
         >
           <div className="p-6 flex items-center justify-between">
             {isSidebarOpen && (
               <motion.h1 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent"
               >
                 Axiora
               </motion.h1>
             )}
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-white/10 rounded-xl text-white transition-all duration-300"
+              className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl text-slate-600 dark:text-white transition-all duration-300"
             >
               {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -84,16 +84,16 @@ function App() {
             <NavItem to="/goals" icon={<Target size={22} />} label="Goals" isOpen={isSidebarOpen} />
           </nav>
 
-          <div className="p-4 border-t border-white/10">
+          <div className="p-4 border-t border-black/5 dark:border-white/10">
             <button 
               onClick={toggleTheme}
-              className="flex items-center w-full p-3 hover:bg-white/10 rounded-xl text-white transition-all duration-300 group"
+              className="flex items-center w-full p-3 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl text-slate-600 dark:text-white transition-all duration-300 group"
             >
               <div className="relative w-6 h-6 flex items-center justify-center">
                 {isDarkMode ? (
                   <Sun className="text-yellow-400 group-hover:rotate-45 transition-transform" />
                 ) : (
-                  <Moon className="text-blue-400 group-hover:-rotate-12 transition-transform" />
+                  <Moon className="text-blue-600 group-hover:-rotate-12 transition-transform" />
                 )}
               </div>
               {isSidebarOpen && (
@@ -132,8 +132,8 @@ function NavItem({ to, icon, label, isOpen }: { to: string, icon: ReactNode, lab
       to={to} 
       className={`flex items-center p-3 rounded-xl transition-all duration-300 ${
         isActive 
-          ? 'bg-blue-600/50 text-white shadow-lg shadow-blue-500/20 border border-blue-400/30' 
-          : 'text-white/60 hover:bg-white/10 hover:text-white'
+          ? 'bg-blue-600 dark:bg-blue-600/50 text-white shadow-lg shadow-blue-500/20 border border-blue-400/30' 
+          : 'text-slate-600 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white'
       }`}
     >
       <span className="flex-shrink-0">{icon}</span>
