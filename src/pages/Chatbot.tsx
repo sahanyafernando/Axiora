@@ -1,81 +1,222 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Send, Mic, MicOff, User, Bot, Sparkles } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Send, Mic, MicOff, User, Bot, Sparkles, Volume2, VolumeX } from 'lucide-react'
+import { format } from 'date-fns'
+
+interface Message {
+  id: number
+  text: string
+  sender: 'user' | 'bot'
+  timestamp: Date
+}
 
 const Chatbot = () => {
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hello! I'm Axiora AI. How can I help you today?", sender: 'bot' },
+  const [messages, setMessages] = useState<Message[]>([
+    { id: 1, text: "Hello! I'm Axiora AI. I can help you manage your goals, expenses, and schedule. How can I assist you today?", sender: 'bot', timestamp: new Date() },
   ])
   const [input, setInput] = useState('')
   const [isListening, setIsListening] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  // Speech Recognition setup
+  const recognitionRef = useRef<any>(null)
 
-  const handleSend = () => {
-    if (!input.trim()) return
-    setMessages([...messages, { id: messages.length + 1, text: input, sender: 'user' }])
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ('WebkitSpeechRecognition' in window || 'speechRecognition' in window)) {
+      const SpeechRecognition = (window as any).WebkitSpeechRecognition || (window as any).speechRecognition
+      recognitionRef.current = new SpeechRecognition()
+      recognitionRef.current.continuous = false
+      recognitionRef.current.interimResults = false
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        setInput(transcript)
+        setIsListening(false)
+        handleSend(transcript)
+      }
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false)
+      }
+    }
+  }, [])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isTyping])
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+    } else {
+      setInput('')
+      recognitionRef.current?.start()
+      setIsListening(true)
+    }
+  }
+
+  const handleSend = (textOverride?: string) => {
+    const messageText = textOverride || input
+    if (!messageText.trim()) return
+
+    const newUserMsg: Message = {
+      id: Date.now(),
+      text: messageText,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, newUserMsg])
     setInput('')
-    // Simulate bot response
+    setIsTyping(true)
+
+    // Simulate AI thinking and responding
     setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        id: prev.length + 1, 
-        text: "I'm processing your request. How else can I assist with your daily management?", 
-        sender: 'bot' 
-      }])
-    }, 1000)
+      const botResponse = getBotResponse(messageText)
+      const newBotMsg: Message = {
+        id: Date.now() + 1,
+        text: botResponse,
+        sender: 'bot',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, newBotMsg])
+      setIsTyping(false)
+      if (isSpeaking) speak(botResponse)
+    }, 1500)
+  }
+
+  const getBotResponse = (text: string) => {
+    const lower = text.toLowerCase()
+    if (lower.includes('expense') || lower.includes('spent') || lower.includes('earn')) 
+      return "I can help you track that! Go to the Expenses page to log your LKR transactions."
+    if (lower.includes('goal')) 
+      return "Setting goals is great! You can manage your weekly and monthly targets in the Goals section."
+    if (lower.includes('todo') || lower.includes('task')) 
+      return "I've noted that. Check your To-Do List to see your schedule for the week."
+    if (lower.includes('hello') || lower.includes('hi')) 
+      return "Hi there! I'm ready to help you manage your day. What's on your mind?"
+    return "I understand. I'm here to help you stay organized with Axiora. Would you like to check your dashboard?"
+  }
+
+  const speak = (text: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel()
+        const utterance = new SpeechSynthesisUtterance(text)
+        utterance.onstart = () => setIsSpeaking(true)
+        utterance.onend = () => setIsSpeaking(false)
+        utterance.onerror = () => setIsSpeaking(false)
+        window.speechSynthesis.speak(utterance)
+      } catch (error) {
+        console.error("Speech synthesis error:", error)
+        setIsSpeaking(false)
+      }
+    }
   }
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="h-[calc(100vh-8rem)] flex flex-col"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="h-[calc(100vh-8rem)] flex flex-col glass-card p-0 overflow-hidden"
     >
-      <header className="flex justify-between items-center bg-white/10 backdrop-blur-md p-6 rounded-t-3xl border-x border-t border-white/20 shadow-xl">
-        <h2 className="text-3xl font-bold text-white flex items-center">
-          <Sparkles className="mr-3 text-pink-500" size={32} /> AI Chatbot
-        </h2>
-        <div className="flex space-x-2">
-          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-white/60 text-sm">Online</span>
+      <header className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/20">
+              <Sparkles className="text-white" size={24} />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-4 border-slate-900 animate-pulse" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-white leading-none">Axiora AI</h2>
+            <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Smart Assistant</p>
+          </div>
         </div>
+        <button 
+          onClick={() => setIsSpeaking(!isSpeaking)}
+          className={`p-3 rounded-xl transition-all ${isSpeaking ? 'bg-pink-500/20 text-pink-400' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
+        >
+          {isSpeaking ? <Volume2 size={20} /> : <VolumeX size={20} />}
+        </button>
       </header>
 
-      <section className="flex-1 overflow-y-auto p-6 space-y-4 bg-white/5 backdrop-blur-md border-x border-white/10 shadow-inner">
+      <section className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-4 rounded-2xl flex items-start space-x-3 shadow-lg ${
-              msg.sender === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none border border-white/10'
-            }`}>
-              <div className="flex-shrink-0 mt-1">
-                {msg.sender === 'user' ? <User size={18} /> : <Bot size={18} />}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            key={msg.id} 
+            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div className={`flex items-end gap-3 max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-lg ${
+                msg.sender === 'user' ? 'bg-blue-600' : 'bg-white/10 border border-white/10'
+              }`}>
+                {msg.sender === 'user' ? <User size={16} className="text-white" /> : <Bot size={16} className="text-white" />}
               </div>
-              <p className="text-sm md:text-base leading-relaxed">{msg.text}</p>
+              <div className={`p-4 rounded-3xl shadow-xl ${
+                msg.sender === 'user' 
+                  ? 'bg-blue-600 text-white rounded-br-none' 
+                  : 'bg-white/10 text-white rounded-bl-none border border-white/10 backdrop-blur-md'
+              }`}>
+                <p className="text-sm md:text-base leading-relaxed font-medium">{msg.text}</p>
+                <p className={`text-[9px] mt-2 font-bold uppercase tracking-wider ${
+                  msg.sender === 'user' ? 'text-white/40' : 'text-white/20'
+                }`}>
+                  {format(msg.timestamp, 'HH:mm')}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-white/5 border border-white/10 p-4 rounded-3xl rounded-tl-none flex gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce" />
+              <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce [animation-delay:0.2s]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce [animation-delay:0.4s]" />
             </div>
           </div>
-        ))}
+        )}
+        <div ref={messagesEndRef} />
       </section>
 
-      <footer className="p-6 bg-white/10 backdrop-blur-md rounded-b-3xl border-x border-b border-white/20 shadow-xl">
-        <div className="flex items-center space-x-4">
+      <footer className="p-6 bg-white/5 border-t border-white/10">
+        <div className="flex items-center gap-3">
           <button 
-            onClick={() => setIsListening(!isListening)}
-            className={`p-4 rounded-full transition-all shadow-lg ${
-              isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white hover:bg-white/20'
+            onClick={toggleListening}
+            className={`p-4 rounded-2xl transition-all shadow-lg flex-shrink-0 ${
+              isListening 
+                ? 'bg-red-500 text-white ring-4 ring-red-500/20 scale-110' 
+                : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white border border-white/10'
             }`}
           >
             {isListening ? <MicOff size={24} /> : <Mic size={24} />}
           </button>
-          <input 
-            type="text" 
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type your message..."
-            className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-          />
+          
+          <div className="relative flex-1">
+            <input 
+              type="text" 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder={isListening ? "Listening..." : "Ask me anything..."}
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner font-medium"
+            />
+          </div>
+
           <button 
-            onClick={handleSend}
-            className="p-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl active:scale-95"
+            onClick={() => handleSend()}
+            disabled={!input.trim()}
+            className="p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/20 active:scale-95 disabled:opacity-50 disabled:scale-100 flex-shrink-0"
           >
             <Send size={24} />
           </button>
@@ -86,3 +227,4 @@ const Chatbot = () => {
 }
 
 export default Chatbot
+
