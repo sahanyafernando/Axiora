@@ -4,7 +4,8 @@ import { Plus, Pencil, Trash2, Target, Award, X, CheckCircle2, Circle } from 'lu
 import { useAppContext } from '../context/AppContext'
 
 interface Goal {
-  id: number
+  id: string
+  _id?: string
   title: string
   type: 'Weekly' | 'Monthly'
   status: 'Pending' | 'Completed'
@@ -14,7 +15,7 @@ const Goals = () => {
   const { goals, addGoal, updateGoal, deleteGoal } = useAppContext()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
-  const [formData, setFormData] = useState<Omit<Goal, 'id' | 'status'>>({
+  const [formData, setFormData] = useState<Omit<Goal, 'id' | 'status' | '_id'>>({
     title: '',
     type: 'Weekly'
   })
@@ -36,30 +37,30 @@ const Goals = () => {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this goal?')) {
-      deleteGoal(id)
+      await deleteGoal(id)
     }
   }
 
-  const toggleStatus = (id: number) => {
+  const toggleStatus = async (id: string) => {
     const goal = goals.find(g => g.id === id)
     if (goal) {
-      updateGoal(id, { status: goal.status === 'Pending' ? 'Completed' : 'Pending' })
+      await updateGoal(id, { status: goal.status === 'Pending' ? 'Completed' : 'Pending' })
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (editingGoal) {
-      updateGoal(editingGoal.id, formData)
+      await updateGoal(editingGoal.id, formData)
     } else {
-      addGoal(formData)
+      await addGoal(formData)
     }
     setIsModalOpen(false)
   }
 
-  const sortedGoals = [...goals].sort((a, b) => b.id - a.id)
+  const sortedGoals = [...goals]
   const weeklyGoals = sortedGoals.filter(g => g.type === 'Weekly')
   const monthlyGoals = sortedGoals.filter(g => g.type === 'Monthly')
 

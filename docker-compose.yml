@@ -1,12 +1,34 @@
 version: '3.8'
 
 services:
-  axiora:
+  # Backend API
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/axiora
+      - PORT=5000
+    depends_on:
+      - mongo
+
+  # Database
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  # Frontend
+  frontend:
     build: .
     ports:
-      - "8080:80"
-    volumes:
-      - .:/app
-      - /app/node_modules
+      - "80:80"
     environment:
-      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:5000/api
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:

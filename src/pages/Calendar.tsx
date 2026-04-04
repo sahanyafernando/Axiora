@@ -17,7 +17,8 @@ import {
 import { useAppContext } from '../context/AppContext'
 
 interface Task {
-  id: number
+  id: string
+  _id?: string
   title: string
   category: string
   date: Date
@@ -67,7 +68,6 @@ const CalendarPage = () => {
 
   const selectedDayTasks = [...tasks]
     .filter(t => isSameDay(new Date(t.date), selectedDate))
-    .sort((a, b) => b.id - a.id)
 
   const handleOpenModal = (task?: Task) => {
     if (task) {
@@ -88,13 +88,13 @@ const CalendarPage = () => {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      deleteTask(id)
+      await deleteTask(id)
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const taskData = {
       title: formData.title,
@@ -104,9 +104,9 @@ const CalendarPage = () => {
     }
 
     if (editingTask) {
-      updateTask(editingTask.id, taskData)
+      await updateTask(editingTask.id, taskData)
     } else {
-      addTask(taskData)
+      await addTask(taskData)
     }
     setIsModalOpen(false)
   }

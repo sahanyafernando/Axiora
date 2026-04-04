@@ -93,8 +93,8 @@ const Chatbot = () => {
     setIsTyping(true)
 
     // Simulate AI thinking and responding
-    setTimeout(() => {
-      const botResponse = getBotResponse(messageText)
+    setTimeout(async () => {
+      const botResponse = await getBotResponse(messageText)
       const newBotMsg: Message = {
         id: Date.now() + 1,
         text: botResponse,
@@ -107,14 +107,14 @@ const Chatbot = () => {
     }, 1500)
   }
 
-  const getBotResponse = (text: string) => {
+  const getBotResponse = async (text: string) => {
     const lower = text.toLowerCase()
     
     // Check for adding task
     if (lower.includes('add task') || lower.includes('remind me to')) {
       const taskName = lower.replace('add task', '').replace('remind me to', '').trim()
       if (taskName) {
-        addTask({
+        await addTask({
           title: taskName.charAt(0).toUpperCase() + taskName.slice(1),
           category: 'Daily needs',
           date: new Date(),
@@ -131,7 +131,7 @@ const Chatbot = () => {
       const amount = amountMatch ? parseInt(amountMatch[0]) : 0
       
       if (amount > 0) {
-        addExpense({
+        await addExpense({
           type,
           amount,
           category: 'Other with reason',

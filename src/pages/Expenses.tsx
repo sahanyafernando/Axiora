@@ -4,7 +4,8 @@ import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
 
 interface Expense {
-  id: number
+  id: string
+  _id?: string
   type: 'Earn' | 'Spent'
   amount: number
   category: string
@@ -15,7 +16,7 @@ const Expenses = () => {
   const { expenses, addExpense, updateExpense, deleteExpense } = useAppContext()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
-  const [formData, setFormData] = useState<Omit<Expense, 'id'>>({
+  const [formData, setFormData] = useState<Omit<Expense, 'id' | '_id'>>({
     type: 'Spent',
     amount: 0,
     category: 'Necessary food',
@@ -48,13 +49,13 @@ const Expenses = () => {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-      deleteExpense(id)
+      await deleteExpense(id)
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Final check for amount
     const cleanFormData = {
@@ -62,14 +63,14 @@ const Expenses = () => {
       amount: isNaN(formData.amount) ? 0 : formData.amount
     }
     if (editingExpense) {
-      updateExpense(editingExpense.id, cleanFormData)
+      await updateExpense(editingExpense.id, cleanFormData)
     } else {
-      addExpense(cleanFormData)
+      await addExpense(cleanFormData)
     }
     setIsModalOpen(false)
   }
 
-  const sortedExpenses = [...expenses].sort((a, b) => b.id - a.id)
+  const sortedExpenses = [...expenses]
 
   return (
     <motion.div 

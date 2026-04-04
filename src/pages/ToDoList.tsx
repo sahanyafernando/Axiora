@@ -5,7 +5,8 @@ import { format, startOfWeek, addDays, isSameDay, isBefore, startOfDay } from 'd
 import { useAppContext } from '../context/AppContext'
 
 interface Task {
-  id: number
+  id: string
+  _id?: string
   title: string
   category: string
   date: Date
@@ -50,20 +51,21 @@ const ToDoList = () => {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      deleteTask(id)
+      await deleteTask(id)
     }
   }
 
-  const toggleStatus = (id: number) => {
+  const toggleStatus = async (id: string) => {
     const task = tasks.find(t => t.id === id)
     if (task) {
-      updateTask(id, { ...task, status: task.status === 'Pending' ? 'Completed' : 'Pending' })
+      const { id: _, _id: __, ...taskData } = task
+      await updateTask(id, { ...taskData, status: task.status === 'Pending' ? 'Completed' : 'Pending' })
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const taskData = {
       title: formData.title,
@@ -73,15 +75,15 @@ const ToDoList = () => {
     }
 
     if (editingTask) {
-      updateTask(editingTask.id, taskData)
+      await updateTask(editingTask.id, taskData)
     } else {
-      addTask(taskData)
+      await addTask(taskData)
     }
     setIsModalOpen(false)
   }
 
   const overdueTasks = tasks.filter(t => t.status === 'Pending' && isBefore(startOfDay(t.date), today))
-  const sortedTasks = [...tasks].sort((a, b) => b.id - a.id)
+  const sortedTasks = [...tasks]
 
   return (
     <motion.div 
